@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>alarm</title>
+    <style>
+      button,
+      span {
+        cursor: pointer;
+      }
+      span {
+        border: 2px solid black;
+        margin: 0 0.5rem;
+        padding: 0 0.5rem;
+        border-radius: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h2 id="currentTime"></h2>
+    <form id="alarmForm">
+      <label for="alarmYear"
+        >year
+        <input
+          type="number"
+          name="alarmYear"
+          id="alarmYear"
+          value="2022"
+          maxlength="4"
+          required
+          min="2022"
+          max="2200"
+        />
+      </label>
+      <label for="alarmMonth"
+        >month
+        <input
+          type="number"
+          name="alarmMonth"
+          id="alarmMonth"
+          value="11"
+          min="1"
+          max="12"
+          required
+        />
+      </label>
+      <label for="alarmDay"
+        >day
+        <input
+          type="number"
+          name="alarmDay"
+          id="alarmDay"
+          value="15"
+          min="1"
+          max="31"
+          required
+        />
+      </label>
+      <label for="alarmHour"
+        >hour
+        <input
+          type="number"
+          name="alarmHour"
+          id="alarmHour"
+          value="15"
+          min="0"
+          max="23"
+          required
+        />
+      </label>
+      <label for="alarmMinute"
+        >minute
+        <input
+          type="number"
+          name="alarmMinute"
+          id="alarmMinute"
+          min="0"
+          max="59"
+          required
+        />
+      </label>
+      <button>Set Alarm</button>
+    </form>
+    <div id="alarms"></div>
+    <audio
+      id="audio"
+      src="./mixkit-alarm-digital-clock-beep-989.wav"
+      preload="auto"
+    ></audio>
+
+    <script>
+      const currentTime = document.getElementById("currentTime");
+      currentTime.innerText = new Date().toLocaleString();
+
+      setInterval(() => {
+        currentTime.innerText = new Date().toLocaleString();
+      }, 1000);
+      let audio = document.getElementById("audio");
+
+      //
+      let alarmForm = document.getElementById("alarmForm");
+
+      let alarms = document.getElementById("alarms");
+
+      let handleAlarmSubmit = (e, snoozed = false) => {
+        e.preventDefault();
+        audio.pause();
+
+        let alarmYear = document.getElementById("alarmYear").value;
+
+        let alarmMonth = document.getElementById("alarmMonth").value - 1;
+
+        let alarmDay = document.getElementById("alarmDay").value;
+
+        let alarmHour = document.getElementById("alarmHour").value;
+
+        let alarmMinute = document.getElementById("alarmMinute").value;
+
+        let setAlarm = new Date(
+          alarmYear,
+          alarmMonth,
+          alarmDay,
+          alarmHour,
+          alarmMinute
+        );
+
+        if (snoozed) {
+          setAlarm = new Date(new Date().getTime() + parseInt(60000 * 5));
+        }
+
+        // appending alarm and a delete button to dom
+
+        let alarm = document.createElement("p");
+        let deleteButton = document.createElement("span");
+        deleteButton.innerText = "delete";
+
+        let alarmTimeAsString = setAlarm.toLocaleString();
+
+        alarm.innerText = `set alarm for  ${alarmTimeAsString}`;
+        alarm.appendChild(deleteButton);
+        alarms.appendChild(alarm);
+
+        // setting interval for every second to check an alarm completed or not
+
+        let interval = setInterval(() => {
+          console.log(
+            "left in " + alarmTimeAsString,
+            setAlarm.getTime() - new Date().getTime()
+          );
+          if (setAlarm.getTime() - new Date().getTime() < 0) {
+            audio.play();
+
+            audio.addEventListener("ended", () => {
+              clearInterval(interval);
+              alarms.removeChild(alarm);
+
+              let snooze = confirm(
+                `completed ${alarmTimeAsString}\nsnooze for 5 minutes ?`
+              );
+              if (snooze) {
+                handleAlarmSubmit(e, true);
+              }
+            });
+          }
+        }, 1000);
+
+        // double tap to delete alarm
+        deleteButton.addEventListener("click", () => {
+          clearInterval(interval);
+          alarms.removeChild(alarm);
+        });
+      };
+
+      alarmForm.addEventListener("submit", handleAlarmSubmit);
+    </script>
+  </body>
+</html>
